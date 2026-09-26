@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResumeFit AI | Calibrate Your Resume</title>
+  <link rel="icon" href="/static/assets/logo.svg" type="image/svg+xml">
+
+  <meta name="description"
+    content="Cryptographic-level resume calibration. Compare your resume against target job descriptions with zero data retention.">
+  <link rel="stylesheet" href="/static/style.css?v=15">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <header role="banner" class="global-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo" aria-label="ResumeFit AI Home">
+        <img src="/static/assets/logo.svg" alt="" class="brand-logo-img" aria-hidden="true">
+        <div class="brand-text">
+          <span class="brand-name">ResumeFit</span><span class="brand-tld">.ai</span>
+        </div>
+      </a>
+
+      <button class="cmd-k-trigger" aria-label="Open command palette">
+        <span class="cmd-icon" aria-hidden="true" id="cmd-key-icon">Ctrl</span>
+        <span class="cmd-text" id="cmd-key-text"> + K for commands</span>
+      </button>
+
+      <nav class="header-nav" aria-label="Primary navigation">
+        <a href="/" class="nav-link active">Workspace</a>
+        <a href="/docs" class="nav-link">Documentation</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" role="main">
+
+    <section id="state-command-center" class="command-center active" aria-labelledby="hero-title">
+
+      <div class="hero">
+        <h1 id="hero-title" class="hero-headline">Analyze your resume<br>against any job description.</h1>
+        <p class="hero-subtext">Upload your resume and target role. Our AI engine instantly computes your semantic match
+          score and identifies missing keywords, with absolute zero data retention.</p>
+      </div>
+
+      <form id="analysis-form" class="terminal-form" aria-label="Resume Analysis Form">
+
+        <div class="dropzone-container" id="dropzone-container">
+          <label for="resume-upload" class="dropzone-label" id="dropzone-label">
+            <input type="file" id="resume-upload" name="resume" accept=".pdf,.docx,.txt" class="file-overlay-input" required
+              aria-describedby="upload-hint">
+            <div class="dropzone-content" id="dropzone-content">
+              <svg class="icon-plus" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.5" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span class="dropzone-text">Drop resume file here or click to browse</span>
+              <span id="upload-hint" class="dropzone-hint sr-only">Accepts PDF, DOCX, or TXT files.</span>
+            </div>
+
+            <div class="file-card-wrapper" id="file-card-wrapper" style="display: none;">
+              <div class="file-card-success-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                Resume Uploaded
+              </div>
+              <div class="file-card">
+                <div class="file-card-icon">📄</div>
+                <div class="file-card-info">
+                  <span class="file-card-name" id="file-card-name"></span>
+                  <span class="file-card-meta" id="file-card-meta"></span>
+                </div>
+                <button type="button" class="btn-remove-file" id="btn-remove-file" aria-label="Remove file">✕</button>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div class="jd-input-container">
+          <label for="jd-input" class="jd-label sr-only">Job Description</label>
+          <textarea id="jd-input" name="job_description" class="jd-textarea"
+            placeholder="Paste the target Job Description..." required></textarea>
+        </div>
+
+        <button type="submit" class="action-submit" id="analyze-btn">
+          <span class="btn-text">Analyze Resume Match</span>
+          <span class="btn-shortcut" aria-hidden="true">↵</span>
+        </button>
+
+      </form>
+
+      <button id="demo-mode-btn" class="demo-link">Or try with a sample Engineer resume ↗</button>
+
+      <div id="terminal-loader" class="terminal-loader" style="display: none;" aria-hidden="true">
+        <div class="terminal-output" id="terminal-output"></div>
+      </div>
+
+      <div class="trust-signal" role="note">
+        <span class="trust-text">Local session only. Zero data retention. Your data never trains our models.</span>
+      </div>
+    </section>
+
+    <section id="state-ide-canvas" class="ide-canvas" aria-hidden="true" style="display: none;">
+
+      <header class="results-top-bar">
+        <div class="score-visualization">
+          <div class="mesh-gradient-bg" aria-hidden="true"></div>
+          <output class="match-score" id="final-score" aria-label="Match Score">0</output>
+          <span class="score-symbol" aria-hidden="true">%</span>
+        </div>
+
+        <dl class="telemetry-grid" aria-label="Analysis Telemetry">
+          <div class="telemetry-row">
+            <dt>MATCH_SIGNAL</dt>
+            <dd></dd>
+          </div>
+          <div class="telemetry-row">
+            <dt>RES_WORDS</dt>
+            <dd></dd>
+          </div>
+          <div class="telemetry-row">
+            <dt>JD_WORDS</dt>
+            <dd></dd>
+          </div>
+          <div class="telemetry-row">
+            <dt>GAP_COUNT</dt>
+            <dd></dd>
+          </div>
+        </dl>
+
+        <div class="results-actions">
+          <button class="btn-primary" aria-label="Start New Scan">New Scan (⌘N)</button>
+        </div>
+      </header>
+
+      <div class="diff-workspace">
+
+        <article class="pane resume-pane" aria-label="Your Resume Text">
+          <header class="pane-header">
+            <h2 class="pane-title"></h2>
+          </header>
+          <div class="pane-content custom-scrollbar" id="resume-pane-content">
+          </div>
+        </article>
+
+        <article class="pane jd-pane" aria-label="Target Job Description">
+          <header class="pane-header">
+            <h2 class="pane-title">target_jd.txt</h2>
+            <span class="pane-meta"></span>
+          </header>
+          <div class="pane-content custom-scrollbar" id="jd-pane-content">
+          </div>
+        </article>
+
+      </div>
+
+      <aside class="commits-drawer" aria-label="Improvement Tasks">
+        <header class="drawer-header">
+          <h2 class="drawer-title" id="drawer-title">Analysis Insights</h2>
+          <button class="drawer-toggle" aria-expanded="true" aria-label="Toggle drawer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 15 12 9 18 15"></polyline>
+            </svg>
+          </button>
+        </header>
+
+        <div class="progress-track">
+          <div class="progress-fill" id="commit-progress-fill"></div>
+        </div>
+
+        <div class="drawer-content">
+          <ul class="task-list">
+          </ul>
+        </div>
+      </aside>
+
+    </section>
+  </main>
+
+  <footer role="contentinfo" class="global-footer">
+    <div class="footer-container">
+      <div class="footer-brand-section">
+        <a href="/" class="brand-logo footer-logo" aria-label="ResumeFit AI Home">
+          <img src="/static/assets/logo.svg" alt="" class="brand-logo-img" aria-hidden="true">
+          <div class="brand-text">
+            <span class="brand-name">ResumeFit</span><span class="brand-tld">.ai</span>
+          </div>
+        </a>
+        <span class="copyright">&copy; 2026 Team PhaseShift</span>
+      </div>
+      <nav class="footer-nav" aria-label="Legal navigation">
+        <a href="https://github.com/litch07/resumefit-ai" class="footer-link github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
+          GitHub
+        </a>
+        <a href="/privacy" class="footer-link">Privacy Policy</a>
+        <a href="/security" class="footer-link">Security</a>
+        <a href="/terms" class="footer-link">Terms</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="/static/script.js?v=5"></script>
+
+</body>
+
+</html>

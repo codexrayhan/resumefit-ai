@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | ResumeFit AI</title>
+  <link rel="icon" href="/static/assets/logo.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="/static/style.css?v=16">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <!-- Top navigation bar -->
+  <header role="banner" class="global-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo" aria-label="ResumeFit AI Home">
+        <img src="/static/assets/logo.svg" alt="" class="brand-logo-img" aria-hidden="true">
+        <div class="brand-text">
+          <span class="brand-name">ResumeFit</span><span class="brand-tld">.ai</span>
+        </div>
+      </a>
+
+      <button class="cmd-k-trigger" aria-label="Open command palette">
+        <span class="cmd-icon" aria-hidden="true" id="cmd-key-icon">Ctrl</span>
+        <span class="cmd-text" id="cmd-key-text"> + K for commands</span>
+      </button>
+      <script>
+        if (navigator.userAgent.indexOf('Mac') !== -1) {
+          document.getElementById('cmd-key-icon').textContent = '⌘';
+          document.getElementById('cmd-key-text').textContent = ' K for commands';
+        }
+      </script>
+
+      <nav class="header-nav" aria-label="Primary navigation">
+        <a href="/" class="nav-link">Workspace</a>
+        <a href="/docs" class="nav-link">Documentation</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- The main content of the page -->
+  <main id="main-content" role="main">
+    <!-- Large introductory hero section -->
+    <header class="help-hero">
+      <h1>Privacy Policy</h1>
+      <div class="metadata-tag">Last updated: June 2026</div>
+    </header>
+    <div class="help-layout" style="grid-template-columns: 1fr; max-width: 800px; padding-top: 0;">
+      <!-- The main text content for this legal page -->
+      <section class="help-section">
+
+        <h2 class="help-section-title">1. What Data We Collect</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">When you use ResumeFit AI, you
+          submit two things: your resume file (PDF, DOCX, or TXT, up to 5 MB) and a job description you paste into the
+          form. That's it.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">We do not ask for your name,
+          email address, or any other personal information. There are no user accounts and no registration. You can use
+          the tool completely anonymously.</p>
+
+        <h2 class="help-section-title">2. How We Use Your Data</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">Your resume and job description
+          are used for one purpose only: to generate your analysis results. The text is passed through our local NLP
+          pipeline — text extraction, keyword comparison, and semantic similarity scoring — and the results are returned
+          to your browser.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">Your data is never used to
+          retrain or fine-tune any AI model. It is never read by a human. It is never repurposed beyond the single
+          analysis you requested.</p>
+
+        <h2 class="help-section-title">3. Data Retention</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">We retain nothing. Your uploaded
+          file and its extracted text exist only in server memory for the duration of a single request — typically a few
+          seconds. As soon as the analysis is complete and the response is sent, the data is discarded.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">There is no database. There are
+          no log files containing your resume text. There is no backup of your submission anywhere. Once the request
+          ends, it is gone.</p>
+
+        <h2 class="help-section-title">4. Cookies and Tracking</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">We do not use analytics cookies,
+          advertising cookies, or any form of tracking. We do not use Google Analytics, Mixpanel, or any similar
+          service.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">Flask, the web framework
+          powering this app, may set a minimal session cookie to handle the request lifecycle. This cookie contains no
+          personal information, is not shared with anyone, and expires when you close your browser tab.</p>
+
+        <h2 class="help-section-title">5. Third-Party Services</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">None. Every part of the analysis
+          pipeline runs on our own server. The AI model (SBERT <code
+            style="font-family: var(--font-mono); font-size: 0.875em;">all-MiniLM-L6-v2</code>) is loaded locally — no
+          data is sent to OpenAI, Hugging Face, or any external API.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">The only external resource this
+          page loads is the Google Fonts stylesheet for typography. That request contains no information about you or
+          your resume.</p>
+
+        <h2 class="help-section-title">6. Children's Privacy</h2>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">ResumeFit AI is a tool for
+          analyzing professional resumes and job descriptions. It is not directed at children under 13 years of age. We
+          do not knowingly collect any information from children. If you are under 13, please do not use this
+          service.</p>
+
+        <h2 class="help-section-title">7. Changes to This Policy</h2>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">If we make any meaningful
+          changes to this policy, we will update the "Last updated" date at the top of this page and push the change to
+          our public GitHub repository. Because we collect no contact information, we cannot notify you directly —
+          checking this page or watching the repository is the best way to stay informed.</p>
+
+        <h2 class="help-section-title">8. Contact</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">ResumeFit AI is a university
+          course project built by <strong style="color: var(--text-primary);">Team PhaseShift</strong>. It is not a
+          commercial product and is provided as-is for educational purposes.</p>
+        <p style="margin-bottom: 0; color: var(--text-secondary); line-height: 1.6;">If you have questions or concerns
+          about this policy, please open an issue on our
+          <a href="https://github.com/litch07/resumefit-ai" target="_blank" rel="noopener noreferrer"
+            style="color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px;">GitHub
+            repository</a>.
+        </p>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Page footer -->
+  <footer role="contentinfo" class="global-footer">
+    <div class="footer-container">
+      <div class="footer-brand-section">
+        <a href="/" class="brand-logo footer-logo" aria-label="ResumeFit AI Home">
+          <img src="/static/assets/logo.svg" alt="" class="brand-logo-img" aria-hidden="true">
+          <div class="brand-text">
+            <span class="brand-name">ResumeFit</span><span class="brand-tld">.ai</span>
+          </div>
+        </a>
+        <span class="copyright">&copy; 2026 Team PhaseShift</span>
+      </div>
+      <nav class="footer-nav" aria-label="Legal navigation">
+        <a href="https://github.com/litch07/resumefit-ai" class="footer-link github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="github-icon">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.285 0 .315.225.69.825.57C20.565 21.795 24 17.31 24 12c0-6.63-5.37-12-12-12z" />
+          </svg>
+          GitHub
+        </a>
+        <a href="/privacy" class="footer-link active">Privacy Policy</a>
+        <a href="/security" class="footer-link">Security</a>
+        <a href="/terms" class="footer-link">Terms</a>
+      </nav>
+    </div>
+  </footer>
+  <!-- Load the main JavaScript file -->
+  <script src="/static/script.js?v=9"></script>
+</body>
+
+</html>

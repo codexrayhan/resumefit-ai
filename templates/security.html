@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security | ResumeFit AI</title>
+  <link rel="icon" href="/static/assets/logo.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="/static/style.css?v=16">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <!-- Top navigation bar -->
+  <header role="banner" class="global-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo" aria-label="ResumeFit AI Home">
+        <img src="/static/assets/logo.svg" alt="" class="brand-logo-img" aria-hidden="true">
+        <div class="brand-text">
+          <span class="brand-name">ResumeFit</span><span class="brand-tld">.ai</span>
+        </div>
+      </a>
+
+      <button class="cmd-k-trigger" aria-label="Open command palette">
+        <span class="cmd-icon" aria-hidden="true" id="cmd-key-icon">Ctrl</span>
+        <span class="cmd-text" id="cmd-key-text"> + K for commands</span>
+      </button>
+      <script>
+        if (navigator.userAgent.indexOf('Mac') !== -1) {
+          document.getElementById('cmd-key-icon').textContent = '⌘';
+          document.getElementById('cmd-key-text').textContent = ' K for commands';
+        }
+      </script>
+
+      <nav class="header-nav" aria-label="Primary navigation">
+        <a href="/" class="nav-link">Workspace</a>
+        <a href="/docs" class="nav-link">Documentation</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- The main content of the page -->
+  <main id="main-content" role="main">
+    <!-- Large introductory hero section -->
+    <header class="help-hero">
+      <h1>Security</h1>
+      <div class="metadata-tag">Last updated: June 2026</div>
+    </header>
+    <div class="help-layout" style="grid-template-columns: 1fr; max-width: 800px; padding-top: 0;">
+      <!-- The main text content for this legal page -->
+      <section class="help-section">
+
+        <h2 class="help-section-title">1. Our Security Approach</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">ResumeFit AI is designed with a
+          simple, honest security model: process what you send, return the result, keep nothing. There are no user
+          accounts to compromise, no database to breach, and no credentials of any kind stored anywhere in the
+          system.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">All computation happens
+          server-side in Python. The ML models — SBERT <code
+            style="font-family: var(--font-mono); font-size: 0.875em;">all-MiniLM-L6-v2</code>, the LinearSVC
+          classifier, and the TF-IDF vectorizers — are loaded from local <code
+            style="font-family: var(--font-mono); font-size: 0.875em;">.pkl</code> files. No external API call is
+          ever made during analysis.</p>
+
+        <h2 class="help-section-title">2. File Handling</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">Uploaded files are held in a
+          temporary buffer for the duration of text extraction only — usually under a second. They are never written to
+          permanent disk storage. Once the text has been extracted, the buffer is discarded.</p>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">Flask enforces a hard upload
+          limit of <strong style="color: var(--text-primary);">5 MB</strong> per request. Any file exceeding this
+          limit is rejected before processing begins.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">File type is validated
+          server-side by checking the file extension. Only <code
+            style="font-family: var(--font-mono); font-size: 0.875em;">.pdf</code>, <code
+            style="font-family: var(--font-mono); font-size: 0.875em;">.docx</code>, and <code
+            style="font-family: var(--font-mono); font-size: 0.875em;">.txt</code> files are accepted. Any other
+          extension is rejected with an error before any content is read.</p>
+
+        <h2 class="help-section-title">3. Data Transmission</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">In a local deployment, your
+          resume file travels only from your browser to <code
+            style="font-family: var(--font-mono); font-size: 0.875em;">localhost</code>. It never leaves your
+          machine. No data is forwarded to any external server, cloud service, or third party at any point during
+          analysis.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">If the app is deployed to a
+          remote server, the file upload travels over the network connection between your browser and that server.
+          We recommend running the app over HTTPS in any network-accessible deployment.</p>
+
+        <h2 class="help-section-title">4. What We Do Not Collect</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">We do not collect, store, or
+          process any of the following:</p>
+        <ul style="margin: 0 0 24px 20px; color: var(--text-secondary); line-height: 2;">
+          <li>Passwords or authentication credentials</li>
+          <li>Payment or financial information</li>
+          <li>Email addresses or phone numbers</li>
+          <li>IP addresses or device fingerprints</li>
+          <li>Browser history or behavioral analytics</li>
+        </ul>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">There is simply no
+          mechanism in this application to collect any of the above. The attack surface is limited to the resume
+          text and job description you choose to submit.</p>
+
+        <h2 class="help-section-title">5. Responsible Disclosure</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">If you discover a security
+          vulnerability in ResumeFit AI, please report it responsibly. Do not publish details publicly before giving
+          us a chance to address it.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">Open a private or public
+          issue on our
+          <a href="https://github.com/litch07/resumefit-ai" target="_blank" rel="noopener noreferrer"
+            style="color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px;">GitHub
+            repository</a>
+          and describe what you found. We will respond as quickly as we can.
+        </p>
+
+        <h2 class="help-section-title">6. Limitations</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">ResumeFit AI is a university
+          course project, not a hardened production application. It has not undergone a formal security audit or
+          penetration test.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">Flask's built-in development
+          server and debug mode must be disabled before any public-facing deployment. Running with
+          <code style="font-family: var(--font-mono); font-size: 0.875em;">debug=True</code> in production exposes
+          an interactive debugger that can execute arbitrary code. We strongly recommend using a production-grade WSGI
+          server (such as Gunicorn) if you deploy this application beyond a local demo.
+        </p>
+
+        <h2 class="help-section-title">7. Contact</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">This project is maintained by
+          <strong style="color: var(--text-primary);">Team PhaseShift</strong> as part of a university AI course.
+        </p>
+        <p style="margin-bottom: 0; color: var(--text-secondary); line-height: 1.6;">For security concerns or general
+          questions, please reach out via our
+          <a href="https://github.com/litch07/resumefit-ai" target="_blank" rel="noopener noreferrer"
+            style="color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px;">GitHub
+            repository</a>.
+        </p>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Page footer -->
+  <footer role="contentinfo" class="global-footer">
+    <div class="footer-container">
+      <div class="footer-brand-section">
+        <a href="/" class="brand-logo footer-logo" aria-label="ResumeFit AI Home">
+          <img src="/static/assets/logo.svg" alt="" class="brand-logo-img" aria-hidden="true">
+          <div class="brand-text">
+            <span class="brand-name">ResumeFit</span><span class="brand-tld">.ai</span>
+          </div>
+        </a>
+        <span class="copyright">&copy; 2026 Team PhaseShift</span>
+      </div>
+      <nav class="footer-nav" aria-label="Legal navigation">
+        <a href="https://github.com/litch07/resumefit-ai" class="footer-link github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="github-icon">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.285 0 .315.225.69.825.57C20.565 21.795 24 17.31 24 12c0-6.63-5.37-12-12-12z" />
+          </svg>
+          GitHub
+        </a>
+        <a href="/privacy" class="footer-link">Privacy Policy</a>
+        <a href="/security" class="footer-link active">Security</a>
+        <a href="/terms" class="footer-link">Terms</a>
+      </nav>
+    </div>
+  </footer>
+  <!-- Load the main JavaScript file -->
+  <script src="/static/script.js?v=2"></script>
+</body>
+
+</html>
