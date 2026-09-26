@@ -1,312 +1,188 @@
-# ResumeFit AI
+<div align="center">
+  <img src="static/assets/logo.svg" alt="ResumeFit AI Logo" width="120" />
+</div>
 
-ResumeFit AI is a local machine-learning workflow for preparing resume and job
-description data, training a job-category classifier, and producing reusable
-model files. The current version covers the data and training stage. The web
-application and full inference workflow are planned next.
+<h1 align="center">ResumeFit AI</h1>
 
-Detailed methodology and the latest measured results are available in
-[DOCUMENTATION.md](DOCUMENTATION.md).
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python Version">
+  <img src="https://img.shields.io/badge/Flask-3.1.3-black.svg" alt="Flask">
+  <img src="https://img.shields.io/badge/scikit--learn-1.8.0-orange.svg" alt="scikit-learn">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+</p>
 
-## Current progress
+<p align="center">
+  <b><a href="https://huggingface.co/spaces/litch07/resumefit-ai">🚀 Try the Live Demo on Hugging Face Spaces</a></b>
+</p>
 
-Completed:
+ResumeFit AI analyzes a resume against a job description and returns a match score, missing keywords, improvement suggestions, and predicted job roles — all running locally with no sign-up or data storage.
 
-- Raw resume and job-description CSV files are stored under `data/raw/`.
-- Resume text is cleaned and normalized.
-- Job descriptions, skills, and responsibilities are combined into
-  `full_jd_text`.
-- Large job-description data is processed in chunks.
-- Rare categories with fewer than 10 resume examples are excluded from
-  stratified training.
-- Word-level and character-level TF-IDF features are generated.
-- A balanced `LinearSVC` classifier is trained and evaluated.
-- The trained classifier, vectorizers, and label encoder are saved in
-  `models/`.
-- Cleaning and training results have been recorded in
-  [DOCUMENTATION.md](DOCUMENTATION.md).
+## Features
 
-Recorded result from the current dataset:
+- Match score from 0 to 100 based on semantic similarity between the resume and job description
+- Missing keyword detection showing which job description terms are absent from the resume
+- Improvement suggestions as a prioritized action list derived from the missing keywords
+- Job role prediction showing the top 3 most likely career categories based on resume content
+- Accepts PDF, DOCX, and TXT resume formats
+- No external APIs — all inference runs on the user's machine
 
-- 2,458 cleaned resumes across 24 categories
-- 100.00% training accuracy
-- 71.14% test accuracy
-- 0.660 five-fold macro F1
+## How It Works
 
-Large raw datasets, processed CSV files, and trained model binaries are
-intentionally excluded from Git by `.gitignore`. New users should obtain the
-raw CSV files separately and place them in `data/raw/` before running the
-pipeline.
+1. **Upload** — the user uploads a resume (PDF, DOCX, or TXT) and pastes a job description into the text area.
+2. **Parse** — the system extracts raw text using pdfplumber, PyPDF2 (fallback), or python-docx depending on the file type.
+3. **Analyse** — SBERT (all-MiniLM-L6-v2) generates embeddings for both texts and cosine similarity produces a match score from 0 to 100.
+4. **Keywords** — TF-IDF and RAKE extract important terms from the job description and identify which are missing from the resume.
+5. **Results** — the browser displays the match score, missing keywords, improvement suggestions, and predicted job roles without a page reload.
 
-## What this project does now
+## Tech Stack
 
-The workflow has two stages:
+| Category | Tools |
+| :--- | :--- |
+| **Frontend** | HTML, CSS, JavaScript |
+| **Backend** | Flask 3.1.3, Werkzeug 3.1.8 |
+| **Machine Learning** | scikit-learn 1.8.0, scipy 1.17.1, joblib 1.5.3 |
+| **NLP** | nltk 3.9.4, rake-nltk 1.0.6, sentence-transformers 5.5.1 |
+| **Data Processing** | numpy 2.4.6, pandas 3.0.3, torch 2.12.0 |
+| **Document Parsing** | pdfplumber 0.11.9, PyPDF2 3.0.1, python-docx 1.2.0, Pillow 12.2.0 |
 
-1. **Data cleaning and processing** - prepares the raw Kaggle CSV files.
-2. **Model training and evaluation** — trains a TF-IDF-based `LinearSVC`
-   classifier and saves its artifacts.
+## Quick Start
 
-The current commands run data preparation and model training. They do not yet
-connect the saved model to a user-facing resume analysis interface.
+### Prerequisites
 
-## Prerequisites
+- Python 3.11+
+- Git
 
-Install the following before starting:
+### Installation
 
-- Python **3.11 or newer**
-- Git, if you are cloning the repository
-- At least several GB of free disk space
-- The raw CSV files supplied with the project:
-  - `resumes.csv`
-  - `job_descriptions.csv`
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/litch07/resumefit-ai.git
+   cd resumefit-ai
+   ```
 
-The job-description file is large. Processing it may take several minutes and
-requires additional space for the cleaned output.
+2. **Create a virtual environment**
+   ```bash
+   python -m venv venv
+   ```
 
-## Project structure
+3. **Activate the virtual environment**
+
+   *Windows (PowerShell):*
+   ```powershell
+   .\venv\Scripts\Activate.ps1
+   ```
+
+   *Mac/Linux:*
+   ```bash
+   source venv/bin/activate
+   ```
+
+4. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Download NLTK data**
+   ```bash
+   python -m nltk.downloader stopwords punkt punkt_tab
+   ```
+
+6. **Download the model files**
+
+   Download the three `.pkl` files from [GitHub Releases](https://github.com/litch07/resumefit-ai/releases/latest) and place them in the `models/` folder. See the [Model Files](#model-files) section for details.
+
+7. **Run the application**
+   ```bash
+   python app.py
+   ```
+
+   The app runs at `http://localhost:5000`. The first run downloads the SBERT model (~90 MB) automatically.
+
+## Model Files
+
+The trained model files are distributed via GitHub Releases and are not committed to this repository due to their size.
+
+Download these three files and place them in the `models/` directory:
+
+- `job_classifier.pkl`
+- `tfidf_vectorizer.pkl`
+- `label_encoder.pkl`
+
+**Releases link:** [https://github.com/litch07/resumefit-ai/releases/latest](https://github.com/litch07/resumefit-ai/releases/latest)
+
+## Training Your Own Model (Optional)
+
+To retrain the classifier, obtain the resume dataset from Kaggle and place the CSV files in `data/raw/`. Training data is not included in this repository due to file size and licensing constraints.
+
+Once the data is in place, run:
+
+```bash
+python src/trainer.py
+```
+
+This will generate new `.pkl` files in the `models/` directory.
+
+## Project Structure
 
 ```text
 resumefit-ai/
-|-- README.md                    # Setup and usage guide
-|-- DOCUMENTATION.md             # Methodology and recorded results
-|-- requirements.txt             # Python dependency versions
-|-- app.py                       # Runs cleaning followed by training
-|-- data/
-|   |-- raw/                     # User-provided input CSV files
-|   |   |-- resumes.csv
-|   |   `-- job_descriptions.csv
-|   `-- processed/               # Generated by the cleaning step
-|       |-- resumes_clean.csv
-|       `-- job_descriptions_clean.csv
-|-- models/                      # Generated by the training step
-|   |-- job_classifier.pkl
-|   |-- tfidf_vectorizer.pkl
-|   `-- label_encoder.pkl
-`-- src/
-    |-- data_cleaner.py          # Cleans and processes both CSV files
-    `-- model_trainer.py         # Trains and evaluates the classifier
+├── app.py                    # Flask entry point and route definitions
+├── requirements.txt          # Pinned package dependencies
+├── README.md
+├── API.md                    # HTTP API reference
+├── LICENSE
+├── .gitignore
+├── models/                   # Downloaded .pkl model files (not in Git)
+│   ├── job_classifier.pkl
+│   ├── tfidf_vectorizer.pkl
+│   └── label_encoder.pkl
+├── src/
+│   ├── parser.py             # Extracts text from PDF, DOCX, TXT
+│   ├── preprocessor.py       # Cleans and normalises text
+│   ├── keyword_extractor.py  # TF-IDF and RAKE keyword extraction
+│   ├── embedder.py           # SBERT embeddings and cosine similarity
+│   ├── scorer.py             # Main analysis orchestrator
+│   ├── predictor.py          # Job role prediction using LinearSVC
+│   └── trainer.py            # Standalone model training script
+├── static/
+│   ├── style.css
+│   └── script.js
+├── templates/
+│   ├── index.html
+│   ├── docs.html
+│   ├── privacy.html
+│   ├── security.html
+│   └── terms.html
+└── data/
+    ├── raw/                  # Original datasets (not in Git)
+    └── processed/            # Cleaned CSVs (not in Git)
 ```
 
-The `data/processed/` and `models/` files are generated outputs. They do not
-need to be created manually.
+## Model Performance
 
-## 1. Get the project
+The job classifier is a LinearSVC model trained on 2,457 resumes across 24 job categories using an 80/20 stratified train/test split. It uses dual TF-IDF features — word-level n-grams and character-level n-grams — combined with `scipy.sparse.hstack`. Hyperparameter search over `C = [0.1, 0.5, 1.0, 2.0, 5.0, 10.0]` confirmed that `C = 1.0` is optimal.
 
-If the project is already on your computer, open a terminal in the repository
-root. Otherwise, clone it and enter the project:
+| Metric | Score |
+| :--- | :--- |
+| Test Accuracy | 71.75% |
+| CV Macro F1 Mean | 0.659 (5-fold stratified) |
+| Best Category (DESIGNER) | F1 0.89 |
+| Weakest Category (BPO) | F1 0.00 |
 
-```bash
-git clone https://github.com/codexrayhan/resumefit-ai.git
-cd resumefit-ai
-```
-
-All commands below assume the repository root is the current directory.
-
-## 2. Place the raw datasets
-
-Copy the source files into this exact folder:
-
-```text
-data/raw/
-```
-
-Confirm that these paths exist:
-
-```text
-data/raw/resumes.csv
-data/raw/job_descriptions.csv
-```
-
-Do not rename the files or place them in `data/processed/`.
-
-## 3. Create a virtual environment
-
-### Windows PowerShell
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-If PowerShell blocks activation, run the command below once in a PowerShell
-window opened for your user account, then activate again:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-### macOS or Linux
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-When activation succeeds, install the dependencies:
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-On Windows, if `python` is not recognized, use the Python launcher:
-
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-## 4. Clean and process the datasets
-
-Run the cleaner from the repository root:
-
-### Windows
-
-```powershell
-python .\src\data_cleaner.py
-```
-
-### macOS or Linux
-
-```bash
-python3 src/data_cleaner.py
-```
-
-The cleaner:
-
-- removes rows with missing resume text or category labels;
-- normalizes text to lowercase;
-- removes punctuation and repeated whitespace;
-- removes categories with fewer than 10 examples;
-- combines job-description, skills, and responsibility text into
-  `full_jd_text`; and
-- reads the large job-description file in chunks.
-
-Successful execution creates:
-
-```text
-data/processed/resumes_clean.csv
-data/processed/job_descriptions_clean.csv
-```
-
-The default chunk size is 10,000 rows. If the computer has limited memory,
-reduce it:
-
-```powershell
-python .\src\data_cleaner.py --chunk-size 5000
-```
-
-## 5. Train and evaluate the model
-
-Run this only after the cleaning step completes:
-
-### Windows
-
-```powershell
-python .\src\model_trainer.py
-```
-
-### macOS or Linux
-
-```bash
-python3 src/model_trainer.py
-```
-
-The trainer creates word and character TF-IDF features, performs five-fold
-cross-validation, uses an 80/20 stratified train/test split, trains a balanced
-`LinearSVC`, and prints accuracy, F1, and a classification report.
-
-Successful execution creates:
-
-```text
-models/job_classifier.pkl
-models/tfidf_vectorizer.pkl
-models/label_encoder.pkl
-```
-
-These three files are a single artifact set and must be kept together for
-later inference.
-
-## 6. Run both stages with one command
-
-After installing dependencies and placing the raw data, run:
-
-### Windows
-
-```powershell
-python .\app.py
-```
-
-### macOS or Linux
-
-```bash
-python3 app.py
-```
-
-This runs data cleaning first and model training second.
-
-## Expected results
-
-The recorded run in [DOCUMENTATION.md](DOCUMENTATION.md) produced:
-
-- 2,458 cleaned resumes
-- 24 retained categories
-- 80% training and 20% testing split
-- 100.00% training accuracy
-- 71.14% test accuracy
-- 0.660 five-fold macro F1
-
-Results may differ if the input data, Python version, dependency versions, or
-preprocessing rules change.
+The BPO category scores F1 0.00 not because the model is broken, but because only 4 test samples exist for that category after the train/test split. The training data simply does not have enough BPO examples to support reliable prediction.
 
 ## Troubleshooting
 
-### `FileNotFoundError`
+- **Model files missing** — download `job_classifier.pkl`, `tfidf_vectorizer.pkl`, and `label_encoder.pkl` from [GitHub Releases](https://github.com/litch07/resumefit-ai/releases/latest) and place them in `models/`.
+- **NLTK data errors** — run `python -m nltk.downloader stopwords punkt punkt_tab` with the virtual environment active.
+- **PDF cannot be read** — scanned image PDFs contain no extractable text. The system requires a text-based PDF. Convert the document to DOCX or TXT before uploading.
+- **Port 5000 already in use** — stop the service using that port, or change the port number in `app.py`.
 
-Check that both raw files are located in `data/raw/` and use the
-exact filenames `resumes.csv` and `job_descriptions.csv`.
+## Future Work
 
-### `ModuleNotFoundError`
+- Interactive editing and recalculation — edit the parsed resume and job description text directly on the results page and get an updated score without re-uploading the file.
+- PDF export of the gap analysis report including the match score, missing keywords, and improvement suggestions.
 
-Activate the virtual environment and reinstall dependencies:
+## License
 
-```powershell
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r .\requirements.txt
-```
-
-### The process is slow or runs out of memory
-
-Use a smaller cleaning chunk:
-
-```powershell
-python .\src\data_cleaner.py --chunk-size 2000
-```
-
-Close other memory-intensive applications and ensure sufficient free disk
-space.
-
-### PowerShell cannot run activation scripts
-
-Use the execution-policy command shown in the virtual-environment section, or
-run the project with the virtual environment's Python executable directly:
-
-```powershell
-.\.venv\Scripts\python.exe .\app.py
-```
-
-## Future work
-
-The following work is intentionally left for later stages:
-
-- connect the saved model files to the application inference code;
-- add resume parsing for PDF, DOCX, and TXT uploads;
-- add job-description and resume similarity scoring;
-- add keyword extraction and missing-skill suggestions;
-- expose the complete workflow through the Flask application;
-- add end-to-end tests for cleaning, training, and inference;
-- improve evaluation for rare categories and reduce overfitting; and
-- document deployment and local application usage.
-
-These items are not presented as completed features. They describe the next
-development stages after the current data and training work.
+This project is licensed under the [MIT License](LICENSE).
