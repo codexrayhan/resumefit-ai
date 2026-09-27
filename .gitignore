@@ -1,70 +1,86 @@
-# Python bytecode and caches
+# Python Bytecode & Caches
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
+*.pyd
 
-# Virtual environments
-.venv/
+# Virtual Environments
 venv/
+.venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 
-# Data files
-# Raw and processed datasets may contain large or sensitive source data.
+# Training Datasets
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+data/**/*.csv
+data/**/*.parquet
+data/**/*.jsonl
 
-# Generated model artifacts
-models/*
-!models/.gitkeep
+# Trained Model Binaries
+models/*.pkl
+models/*.joblib
+models/*.pt
+models/*.pth
+models/*.onnx
 *.pkl
 *.joblib
-*.pt
-*.pth
-*.onnx
 
-# Local machine-learning and NLP caches
+# HuggingFace & NLTK Cache
 .cache/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
 huggingface/
 nltk_data/
 
-# Environment variables and local secrets
+# Environment Variables & Secrets
 .env
 .env.*
 !.env.example
 
-# IDE and editor files
+# IDE Files
+.idea/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.idea/
 *.code-workspace
 
-# Operating-system files
+# OS Generated Files
 .DS_Store
 Thumbs.db
+ehthumbs.db
 Desktop.ini
+$RECYCLE.BIN/
 
-# Logs and local reports
+# Logs
 *.log
 logs/
 
-# Build and packaging output
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Build Artifacts & Packaging
 build/
 dist/
+downloads/
+eggs/
+.eggs/
 *.egg-info/
 *.egg
 pip-wheel-metadata/
 wheels/
+MANIFEST
 
-# Test and coverage output
-coverage.xml
+# Testing and Coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
+coverage.xml
 htmlcov/
