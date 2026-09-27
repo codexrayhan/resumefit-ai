@@ -161,3 +161,4 @@ else:
 - **Data Privacy:** Any file uploaded to the server is deleted immediately after the text has been parsed and processing is complete. No data is stored between requests.
 - **Scoring Mechanism:** The score is based on semantic similarity of the text embeddings (computed via cosine similarity), not exact keyword matching.
 - **Model Dependencies:** The `predicted_roles` array will be empty `[]` if the model files are not present in the `models/` directory.
+

@@ -76,3 +76,4 @@ def preprocess_for_display(text: Optional[str]) -> str:
         return ""
 
     return filtered
+

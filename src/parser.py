@@ -98,3 +98,4 @@ def extract_text(file: object, filename: str) -> str:
         return extract_text_from_txt(file)
 
     return ""
+

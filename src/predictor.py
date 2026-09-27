@@ -72,3 +72,4 @@ def predict_job_roles(resume_text, model, vectorizers, label_encoder, top_n=3):
     except Exception as e:
         print(f"Error during job role prediction: {e}")
         return []
+

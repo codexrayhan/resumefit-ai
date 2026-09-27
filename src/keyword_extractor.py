@@ -63,3 +63,4 @@ def find_missing_keywords(resume_text: str, jd_keywords: List[str]) -> List[str]
             missing.append(keyword)
 
     return missing
+

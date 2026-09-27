@@ -35,3 +35,4 @@ def get_similarity_score(text1, text2, model):
     # Clip to [0, 100] — cosine sim can slightly exceed 1.0 from float rounding
     score = min(100.0, max(0.0, float(sim) * 100))
     return round(score, 1)
+

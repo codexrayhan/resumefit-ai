@@ -189,3 +189,4 @@ The next development stages can build on the saved artifacts by:
 - Test accuracy does not guarantee performance on every real-world resume.
 - The current workflow trains the job-role classifier; it does not yet
   implement the full Flask inference interface.
+

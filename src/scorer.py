@@ -71,3 +71,4 @@ def analyze(resume_text, job_description, model):
         "resume_word_count": _count_words(resume_text or ""),
         "jd_word_count": _count_words(job_description or ""),
     }
+
