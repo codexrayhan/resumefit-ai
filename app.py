@@ -4,9 +4,15 @@ import tempfile
 
 sys.path.insert(0, ".")
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask, request, jsonify, render_template, redirect
 from werkzeug.utils import secure_filename
 
+from models import db
+from auth import init_auth
 from src.parser import extract_text
 from src.scorer import analyze
 from src.embedder import load_model
@@ -15,6 +21,17 @@ from src.predictor import load_classifier, predict_job_roles
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 app.config["TEMPLATES_AUTO_RELOAD"] = False
+
+app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///resumefit.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+db.init_app(app)
+init_auth(app)
+
+with app.app_context():
+    db.create_all()
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
 
@@ -213,7 +230,7 @@ def internal_server_error(error):
     return jsonify({"error": "Something went wrong. Please try again."}), 500
 
 
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
-
