@@ -84,3 +84,8 @@ MANIFEST
 .coverage
 coverage.xml
 htmlcov/
+
+# Secrets and local database
+.env
+instance/
+*.db
