@@ -11,10 +11,6 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
 </p>
 
-<p align="center">
-  <b><a href="https://huggingface.co/spaces/litch07/resumefit-ai">🚀 Try the Live Demo on Hugging Face Spaces</a></b>
-</p>
-
 ResumeFit AI analyzes a resume against a job description and returns a match score, missing keywords, improvement suggestions, and predicted job roles — all running locally with no sign-up or data storage.
 
 ## Features
@@ -56,7 +52,7 @@ ResumeFit AI analyzes a resume against a job description and returns a match sco
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/litch07/resumefit-ai.git
+   git clone https://github.com/codexrayhan/resumefit-ai.git
    cd resumefit-ai
    ```
 
@@ -89,7 +85,7 @@ ResumeFit AI analyzes a resume against a job description and returns a match sco
 
 6. **Download the model files**
 
-   Download the three `.pkl` files from [GitHub Releases](https://github.com/litch07/resumefit-ai/releases/latest) and place them in the `models/` folder. See the [Model Files](#model-files) section for details.
+   Download the three `.pkl` files from [GitHub Releases](https://github.com/codexrayhan/resumefit-ai/releases/latest) and place them in the `models/` folder. See the [Model Files](#model-files) section for details.
 
 7. **Run the application**
    ```bash
@@ -108,7 +104,7 @@ Download these three files and place them in the `models/` directory:
 - `tfidf_vectorizer.pkl`
 - `label_encoder.pkl`
 
-**Releases link:** [https://github.com/litch07/resumefit-ai/releases/latest](https://github.com/litch07/resumefit-ai/releases/latest)
+**Releases link:** [https://github.com/codexrayhan/resumefit-ai/releases/latest](https://github.com/codexrayhan/resumefit-ai/releases/latest)
 
 ## Training Your Own Model (Optional)
 
@@ -173,7 +169,7 @@ The BPO category scores F1 0.00 not because the model is broken, but because onl
 
 ## Troubleshooting
 
-- **Model files missing** — download `job_classifier.pkl`, `tfidf_vectorizer.pkl`, and `label_encoder.pkl` from [GitHub Releases](https://github.com/litch07/resumefit-ai/releases/latest) and place them in `models/`.
+- **Model files missing** — download `job_classifier.pkl`, `tfidf_vectorizer.pkl`, and `label_encoder.pkl` from [GitHub Releases](https://github.com/codexrayhan/resumefit-ai/releases/latest) and place them in `models/`.
 - **NLTK data errors** — run `python -m nltk.downloader stopwords punkt punkt_tab` with the virtual environment active.
 - **PDF cannot be read** — scanned image PDFs contain no extractable text. The system requires a text-based PDF. Convert the document to DOCX or TXT before uploading.
 - **Port 5000 already in use** — stop the service using that port, or change the port number in `app.py`.
@@ -186,4 +182,3 @@ The BPO category scores F1 0.00 not because the model is broken, but because onl
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
