@@ -2,6 +2,11 @@ import os
 import sys
 import tempfile
 
+from datetime import timedelta   
+
+from flask import Flask, request, jsonify, render_template, redirect, session
+from flask_login import current_user
+
 sys.path.insert(0, ".")
 
 from dotenv import load_dotenv
@@ -26,6 +31,7 @@ app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///resumefit.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 
 db.init_app(app)
 init_auth(app)
@@ -52,6 +58,62 @@ except Exception as e:
 classifier, vectorizers, label_encoder = load_classifier()
 
 print("Models loaded. Starting server…")
+
+
+GUEST_LIMIT = 2
+
+
+def _guest_limit_reached() -> bool:
+    return (
+        not current_user.is_authenticated
+        and session.get("guest_uses", 0) >= GUEST_LIMIT
+    )
+
+
+def _limit_response():
+    return (
+        jsonify(
+            {
+                "error": "Free limit reached. Please sign in with Google to continue.",
+                "login_required": True,
+            }
+        ),
+        403,
+    )
+
+
+def _analysis_response(resume_text: str, job_description: str):
+    result = analyze(resume_text, job_description, sbert_model)
+
+    if classifier is not None:
+        roles = predict_job_roles(
+            resume_text,
+            classifier,
+            vectorizers,
+            label_encoder,
+            top_n=3,
+        )
+    else:
+        roles = []
+
+    if not current_user.is_authenticated:
+        session.permanent = True
+        session["guest_uses"] = session.get("guest_uses", 0) + 1
+
+    return jsonify(
+        {
+            "score":             result["score"],
+            "score_label":       result["score_label"],
+            "score_color":       result["score_color"],
+            "missing_keywords":  result["missing_keywords"],
+            "jd_keywords":       result["jd_keywords"],
+            "suggestions":       result["suggestions"],
+            "resume_word_count": result["resume_word_count"],
+            "jd_word_count":     result["jd_word_count"],
+            "predicted_roles":   roles,
+            "resume_text":       resume_text,
+        }
+    )
 
 
 @app.after_request
@@ -94,6 +156,8 @@ def terms_page():
 
 @app.route("/analyze", methods=["POST"])
 def analyze_resume():
+    if _guest_limit_reached():
+        return _limit_response()
     job_description = request.form.get("job_description", "").strip()
     if not job_description:
         return jsonify({"error": "Job description cannot be empty."}), 400
@@ -141,37 +205,13 @@ def analyze_resume():
             except OSError:
                 pass
 
-    result = analyze(resume_text, job_description, sbert_model)
-
-    if classifier is not None:
-        roles = predict_job_roles(
-            resume_text,
-            classifier,
-            vectorizers,
-            label_encoder,
-            top_n=3,
-        )
-    else:
-        roles = []
-
-    return jsonify(
-        {
-            "score":             result["score"],
-            "score_label":       result["score_label"],
-            "score_color":       result["score_color"],
-            "missing_keywords":  result["missing_keywords"],
-            "jd_keywords":       result["jd_keywords"],
-            "suggestions":       result["suggestions"],
-            "resume_word_count": result["resume_word_count"],
-            "jd_word_count":     result["jd_word_count"],
-            "predicted_roles":   roles,
-            "resume_text":       resume_text,
-        }
-    )
+    return _analysis_response(resume_text, job_description)
 
 
 @app.route("/reanalyze", methods=["POST"])
 def reanalyze_resume():
+    if _guest_limit_reached():
+        return _limit_response()
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"error": "Request body must be JSON."}), 400
@@ -185,33 +225,7 @@ def reanalyze_resume():
     if len(job_description.split()) < 20:
         return jsonify({"error": "Job description is too short. Please provide at least 20 words."}), 400
 
-    result = analyze(resume_text, job_description, sbert_model)
-
-    if classifier is not None:
-        roles = predict_job_roles(
-            resume_text,
-            classifier,
-            vectorizers,
-            label_encoder,
-            top_n=3,
-        )
-    else:
-        roles = []
-
-    return jsonify(
-        {
-            "score":             result["score"],
-            "score_label":       result["score_label"],
-            "score_color":       result["score_color"],
-            "missing_keywords":  result["missing_keywords"],
-            "jd_keywords":       result["jd_keywords"],
-            "suggestions":       result["suggestions"],
-            "resume_word_count": result["resume_word_count"],
-            "jd_word_count":     result["jd_word_count"],
-            "predicted_roles":   roles,
-            "resume_text":       resume_text,
-        }
-    )
+    return _analysis_response(resume_text, job_description)
 
 
 @app.route("/health", methods=["POST"])
@@ -228,7 +242,6 @@ def request_entity_too_large(error):
 @app.errorhandler(500)
 def internal_server_error(error):
     return jsonify({"error": "Something went wrong. Please try again."}), 500
-
 
 
 if __name__ == "__main__":
