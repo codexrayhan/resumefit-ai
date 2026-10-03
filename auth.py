@@ -1,14 +1,13 @@
 import os
 
 from authlib.integrations.flask_client import OAuth, OAuthError
-from flask import Blueprint, redirect, url_for
+from flask import Blueprint, jsonify, redirect, request, url_for
 from flask_login import LoginManager, login_user, logout_user
 
 from models import User, db
 
 oauth = OAuth()
 login_manager = LoginManager()
-login_manager.login_view = "auth.login"
 auth_bp = Blueprint("auth", __name__)
 
 
@@ -30,6 +29,13 @@ def init_auth(app):
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    if request.path.startswith("/api/"):
+        return jsonify({"error": "Login required.", "login_required": True}), 401
+    return redirect(url_for("auth.login"))
 
 
 @auth_bp.route("/login")
@@ -59,7 +65,7 @@ def callback():
         db.session.commit()
 
     login_user(user)
-    return redirect("/")      # changed to /dashboard in Step 10
+    return redirect("/")
 
 
 @auth_bp.route("/logout")

@@ -10,10 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, request, jsonify, render_template, redirect, session
-from flask_login import current_user
+from flask_login import current_user, login_required, logout_user
 from werkzeug.utils import secure_filename
 
-from models import db, Analysis
+from models import db, Analysis, User
 from auth import init_auth
 from src.parser import extract_text
 from src.scorer import analyze
@@ -252,6 +252,77 @@ def reanalyze_resume():
         return jsonify({"error": "Job description is too short. Please provide at least 20 words."}), 400
 
     return _analysis_response(resume_text, job_description, label, jd_title)
+
+
+@app.route("/api/history", methods=["GET"])
+@login_required
+def api_history():
+    rows = (
+        Analysis.query.filter_by(user_id=current_user.id)
+        .order_by(Analysis.created_at.asc())
+        .all()
+    )
+
+    analyses = [
+        {
+            "id": a.id,
+            "label": a.label,
+            "jd_title": a.jd_title,
+            "score": a.score,
+            "missing_count": a.missing_count,
+            "created_at": a.created_at.isoformat() + "Z",
+        }
+        for a in rows
+    ]
+
+    groups = {}
+    for a in rows:
+        groups.setdefault(a.label, []).append(a)
+
+    progress = []
+    for label, items in groups.items():
+        first, latest = items[0].score, items[-1].score
+        progress.append(
+            {
+                "label": label,
+                "count": len(items),
+                "first_score": first,
+                "latest_score": latest,
+                "improvement": round(latest - first, 1),
+            }
+        )
+
+    scores = [a.score for a in rows]
+    return jsonify(
+        {
+            "total": len(rows),
+            "average_score": round(sum(scores) / len(scores), 1) if scores else 0,
+            "best_score": max(scores) if scores else 0,
+            "analyses": analyses,
+            "progress": progress,
+        }
+    )
+
+
+@app.route("/api/analysis/<int:analysis_id>", methods=["DELETE"])
+@login_required
+def delete_analysis(analysis_id):
+    item = db.session.get(Analysis, analysis_id)
+    if item is None or item.user_id != current_user.id:
+        return jsonify({"error": "Not found."}), 404
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/account", methods=["DELETE"])
+@login_required
+def delete_account():
+    user = db.session.get(User, current_user.id)
+    logout_user()
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"ok": True})
 
 
 @app.route("/health", methods=["POST"])
