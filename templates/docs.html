@@ -45,6 +45,12 @@
       <nav class="header-nav" aria-label="Primary navigation">
         <a href="/" class="nav-link">Workspace</a>
         <a href="/docs" class="nav-link active">Documentation</a>
+        {% if current_user.is_authenticated %}
+          <a href="/dashboard" class="nav-link">Dashboard</a>
+          <a href="/logout" class="nav-link">Log out</a>
+        {% else %}
+          <a href="/login" class="nav-link">Sign in</a>
+        {% endif %}
       </nav>
     </div>
   </header>
@@ -52,7 +58,7 @@
   <!-- Large introductory hero section -->
   <header class="help-hero">
     <h1>Documentation &amp; FAQ</h1>
-    <div class="metadata-tag">v1.0.0 — Last updated: June 2026</div>
+    <div class="metadata-tag">v1.1.0 — Last updated: October 2026</div>
     <p>Everything you need to calibrate your resume and understand your telemetry.</p>
   </header>
 
@@ -203,6 +209,22 @@
         <div class="faq-list">
           <div class="faq-item">
             <button class="faq-question" aria-expanded="false">
+              Do I need an account?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-inner">
+                No. You can run two free analyses as a guest. To keep going and to save your history, sign in with
+                Google. Sign-in is handled by Google, so the app never sees your password, and you can delete your
+                account and all saved data at any time from the dashboard.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
               Is my resume data retained?
               <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -210,9 +232,11 @@
             </button>
             <div class="faq-answer">
               <div class="faq-answer-inner">
-                No. We operate on a strict zero-retention policy. Documents are processed in memory during your session
-                and immediately purged. We do not store your files, and we do not use user inputs to train foundational
-                AI models.
+                Your resume text is never stored. An uploaded file is written to a temporary location only long enough
+                to extract its text, then deleted immediately, and the extracted text is discarded as soon as your
+                results are returned. We do not use user inputs to train AI models. If you sign in, we save only your
+                analysis scores, missing keywords, predicted roles, and the resume and job names you enter, so you can
+                track your progress. You can delete any analysis, or your whole account, from the dashboard.
               </div>
             </div>
           </div>
@@ -290,9 +314,10 @@
             </button>
             <div class="faq-answer">
               <div class="faq-answer-inner">
-                Because of our zero-retention security policy, all session data is ephemeral and clears when you close
-                the tab. We recommend using the "Export .pdf" feature in the IDE Canvas to save a local copy of your
-                telemetry report.
+                Yes, if you sign in with Google. Signed-in users get a dashboard that lists every saved analysis and
+                charts how the match score changes over time. Give each resume a name when you run an analysis, and
+                analyses with the same name are grouped so you can see your improvement. Guests can run two free
+                analyses per browser, but those are not saved. Your resume text is never saved either way.
               </div>
             </div>
           </div>
@@ -374,4 +399,3 @@
 </body>
 
 </html>
-
