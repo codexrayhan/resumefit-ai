@@ -1,11 +1,7 @@
 import os
 import sys
 import tempfile
-
-from datetime import timedelta   
-
-from flask import Flask, request, jsonify, render_template, redirect, session
-from flask_login import current_user
+from datetime import timedelta
 
 sys.path.insert(0, ".")
 
@@ -13,10 +9,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, request, jsonify, render_template, redirect
+from flask import Flask, request, jsonify, render_template, redirect, session
+from flask_login import current_user
 from werkzeug.utils import secure_filename
 
-from models import db
+from models import db, Analysis
 from auth import init_auth
 from src.parser import extract_text
 from src.scorer import analyze
@@ -40,6 +37,7 @@ with app.app_context():
     db.create_all()
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
+GUEST_LIMIT = 2
 
 
 def _allowed_file(filename: str) -> bool:
@@ -58,9 +56,6 @@ except Exception as e:
 classifier, vectorizers, label_encoder = load_classifier()
 
 print("Models loaded. Starting server…")
-
-
-GUEST_LIMIT = 2
 
 
 def _guest_limit_reached() -> bool:
@@ -82,7 +77,7 @@ def _limit_response():
     )
 
 
-def _analysis_response(resume_text: str, job_description: str):
+def _analysis_response(resume_text, job_description, label="", jd_title=""):
     result = analyze(resume_text, job_description, sbert_model)
 
     if classifier is not None:
@@ -96,9 +91,31 @@ def _analysis_response(resume_text: str, job_description: str):
     else:
         roles = []
 
-    if not current_user.is_authenticated:
+    saved = False
+    guest_uses_left = None
+
+    if current_user.is_authenticated:
+        try:
+            db.session.add(
+                Analysis(
+                    user_id=current_user.id,
+                    label=(label or "My resume")[:120],
+                    jd_title=(jd_title or "")[:200] or None,
+                    score=float(result["score"]),
+                    missing_count=len(result["missing_keywords"]),
+                    missing_keywords=result["missing_keywords"],
+                    predicted_roles=roles,
+                )
+            )
+            db.session.commit()
+            saved = True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Could not save analysis: {e}")
+    else:
         session.permanent = True
         session["guest_uses"] = session.get("guest_uses", 0) + 1
+        guest_uses_left = max(GUEST_LIMIT - session["guest_uses"], 0)
 
     return jsonify(
         {
@@ -112,6 +129,8 @@ def _analysis_response(resume_text: str, job_description: str):
             "jd_word_count":     result["jd_word_count"],
             "predicted_roles":   roles,
             "resume_text":       resume_text,
+            "saved":             saved,
+            "guest_uses_left":   guest_uses_left,
         }
     )
 
@@ -158,12 +177,16 @@ def terms_page():
 def analyze_resume():
     if _guest_limit_reached():
         return _limit_response()
+
     job_description = request.form.get("job_description", "").strip()
     if not job_description:
         return jsonify({"error": "Job description cannot be empty."}), 400
 
     if len(job_description.split()) < 20:
         return jsonify({"error": "Job description is too short. Please provide at least 20 words."}), 400
+
+    label = request.form.get("resume_label", "").strip()
+    jd_title = request.form.get("jd_title", "").strip()
 
     resume_text = request.form.get("resume_text", "").strip()
     uploaded_file = request.files.get("file")
@@ -205,19 +228,22 @@ def analyze_resume():
             except OSError:
                 pass
 
-    return _analysis_response(resume_text, job_description)
+    return _analysis_response(resume_text, job_description, label, jd_title)
 
 
 @app.route("/reanalyze", methods=["POST"])
 def reanalyze_resume():
     if _guest_limit_reached():
         return _limit_response()
+
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"error": "Request body must be JSON."}), 400
 
     resume_text = (data.get("resume_text") or "").strip()
     job_description = (data.get("job_description") or "").strip()
+    label = (data.get("resume_label") or "").strip()
+    jd_title = (data.get("jd_title") or "").strip()
 
     if len(resume_text) < 50:
         return jsonify({"error": "Resume text is too short. Please provide at least 50 characters."}), 400
@@ -225,7 +251,7 @@ def reanalyze_resume():
     if len(job_description.split()) < 20:
         return jsonify({"error": "Job description is too short. Please provide at least 20 words."}), 400
 
-    return _analysis_response(resume_text, job_description)
+    return _analysis_response(resume_text, job_description, label, jd_title)
 
 
 @app.route("/health", methods=["POST"])
