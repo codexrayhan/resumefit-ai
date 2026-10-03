@@ -1566,3 +1566,41 @@ kbd {
   transition: opacity 0.3s ease;
   z-index: 10;
 }
+
+.auth-notice {
+  max-width: 640px;
+  margin: 0 auto 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-subtle, #E4E4E7);
+  border-radius: 6px;
+  background: var(--bg-surface-hover, #FAFAFA);
+  color: var(--text-primary, #0A0A0A);
+  font-size: 0.875rem;
+}
+
+.auth-notice a {
+  margin-left: 8px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.optional-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.optional-fields input {
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle, #E4E4E7);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+@media (max-width: 640px) {
+  .optional-fields { grid-template-columns: 1fr; }
+}

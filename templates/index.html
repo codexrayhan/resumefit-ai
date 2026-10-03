@@ -8,8 +8,8 @@
   <link rel="icon" href="/static/assets/logo.svg" type="image/svg+xml">
 
   <meta name="description"
-    content="Cryptographic-level resume calibration. Compare your resume against target job descriptions with zero data retention.">
-  <link rel="stylesheet" href="/static/style.css?v=15">
+    content="Cryptographic-level resume calibration. Compare your resume against target job descriptions. Your resume text is never stored.">
+  <link rel="stylesheet" href="/static/style.css?v=16">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -36,6 +36,12 @@
       <nav class="header-nav" aria-label="Primary navigation">
         <a href="/" class="nav-link active">Workspace</a>
         <a href="/docs" class="nav-link">Documentation</a>
+        {% if current_user.is_authenticated %}
+          <a href="/dashboard" class="nav-link">Dashboard</a>
+          <a href="/logout" class="nav-link">Log out</a>
+        {% else %}
+          <a href="/login" class="nav-link">Sign in</a>
+        {% endif %}
       </nav>
     </div>
   </header>
@@ -47,8 +53,10 @@
       <div class="hero">
         <h1 id="hero-title" class="hero-headline">Analyze your resume<br>against any job description.</h1>
         <p class="hero-subtext">Upload your resume and target role. Our AI engine instantly computes your semantic match
-          score and identifies missing keywords, with absolute zero data retention.</p>
+          score and identifies missing keywords, and your resume text is never stored.</p>
       </div>
+
+      <div id="auth-notice" class="auth-notice" role="status" aria-live="polite" style="display: none;"></div>
 
       <form id="analysis-form" class="terminal-form" aria-label="Resume Analysis Form">
 
@@ -92,6 +100,15 @@
             placeholder="Paste the target Job Description..." required></textarea>
         </div>
 
+        {% if current_user.is_authenticated %}
+        <div class="optional-fields">
+          <input type="text" id="resume-label" name="resume_label" maxlength="120"
+            placeholder="Resume name, e.g. Backend CV (optional)" aria-label="Resume name">
+          <input type="text" id="jd-title" name="jd_title" maxlength="200"
+            placeholder="Job title (optional)" aria-label="Job title">
+        </div>
+        {% endif %}
+
         <button type="submit" class="action-submit" id="analyze-btn">
           <span class="btn-text">Analyze Resume Match</span>
           <span class="btn-shortcut" aria-hidden="true">↵</span>
@@ -106,7 +123,7 @@
       </div>
 
       <div class="trust-signal" role="note">
-        <span class="trust-text">Local session only. Zero data retention. Your data never trains our models.</span>
+        <span class="trust-text">Your resume text is never stored. Signed-in users keep only scores, keywords and the names they enter. Your data never trains our models.</span>
       </div>
     </section>
 
@@ -142,6 +159,8 @@
           <button class="btn-primary" aria-label="Start New Scan">New Scan (⌘N)</button>
         </div>
       </header>
+
+      <div id="result-notice" class="auth-notice" role="status" aria-live="polite" style="display: none;"></div>
 
       <div class="diff-workspace">
 
@@ -209,9 +228,8 @@
     </div>
   </footer>
 
-  <script src="/static/script.js?v=5"></script>
+  <script src="/static/script.js?v=6"></script>
 
 </body>
 
 </html>
-

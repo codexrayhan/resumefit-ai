@@ -23,6 +23,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const drawerToggle          = document.querySelector('.drawer-toggle');
   const drawerContent         = document.querySelector('.drawer-content');
 
+    const resumeLabelInput = document.getElementById('resume-label');
+  const jdTitleInput     = document.getElementById('jd-title');
+  const authNotice       = document.getElementById('auth-notice');
+  const resultNotice     = document.getElementById('result-notice');
+  let pendingLimitNotice = false;
+
+  // Shows a short message with an optional link (DOM nodes only, no innerHTML)
+  function setNotice(el, message, href, linkText) {
+    if (!el) return;
+    el.replaceChildren();
+    if (!message) { el.style.display = 'none'; return; }
+    el.appendChild(document.createTextNode(message));
+    if (href) {
+      const a = document.createElement('a');
+      a.href = href;
+      a.textContent = linkText;
+      el.appendChild(a);
+    }
+    el.style.display = 'block';
+  }
+
+  function showResultNotice(data) {
+    if (data.saved) {
+      setNotice(resultNotice, 'Saved to your history.', '/dashboard', 'View dashboard');
+    } else if (typeof data.guest_uses_left === 'number') {
+      const left = data.guest_uses_left;
+      const msg = left > 0
+        ? left + (left === 1 ? ' free check left.' : ' free checks left.') + ' Sign in with Google to save your progress.'
+        : 'That was your last free check. Sign in with Google to continue and save your progress.';
+      setNotice(resultNotice, msg, '/login', 'Sign in');
+    } else {
+      setNotice(resultNotice, '');
+    }
+  }
+
   // Prevent XSS by escaping special characters
   function escapeHtml(str) {
     return str
@@ -224,16 +259,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  async function callAnalyzeAPI() {
+    async function callAnalyzeAPI() {
     try {
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
       formData.append('job_description', jdInput.value.trim());
+      formData.append('resume_label', resumeLabelInput ? resumeLabelInput.value.trim() : '');
+      formData.append('jd_title', jdTitleInput ? jdTitleInput.value.trim() : '');
 
       const response = await fetch('/analyze', { method: 'POST', body: formData });
       const data = await response.json();
 
       if (data.error) {
+        if (data.login_required) pendingLimitNotice = true;
         showTerminalError(data.error);
         return null;
       }
@@ -250,7 +288,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/reanalyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume_text: resumeText, job_description: jdText })
+                body: JSON.stringify({
+          resume_text: resumeText,
+          job_description: jdText,
+          resume_label: resumeLabelInput ? resumeLabelInput.value.trim() : '',
+          jd_title: jdTitleInput ? jdTitleInput.value.trim() : ''
+        })
       });
       const data = await response.json();
 
@@ -388,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const missing     = data.missing_keywords || [];
     const suggestions = data.suggestions      || [];
     const roles       = data.predicted_roles  || [];
+    showResultNotice(data);
 
     animateScore(score);
     setTimeout(() => {
@@ -615,6 +659,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rolesSection) rolesSection.remove();
 
     if (scoreElement) scoreElement.textContent = '0';
+        setNotice(resultNotice, '');
+    if (pendingLimitNotice) {
+      pendingLimitNotice = false;
+      setNotice(authNotice, 'Free limit reached. Sign in with Google to keep analyzing and track your progress.', '/login', 'Sign in');
+    } else {
+      setNotice(authNotice, '');
+    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
