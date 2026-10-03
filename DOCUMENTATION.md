@@ -2,10 +2,12 @@
 
 ## Project status
 
-This document describes the work that is actually implemented in the current
-project, not the intended final product.
+This document covers Stage 1 of ResumeFit AI: preparing the datasets and
+training the job-category classifier. It describes what that stage
+implements. The rest of the application is built on top of it and is
+described in `README.md` and `API.md`.
 
-### Completed
+### Completed in this stage
 
 - Raw resume and job-description datasets are available under `data/raw/`.
 - The datasets are cleaned and written to `data/processed/`.
@@ -16,13 +18,20 @@ project, not the intended final product.
 - Model artifacts are saved under `models/`.
 - The cleaning and training workflow can be run from the command line.
 
-### Not completed yet
+### Built in later stages
 
-- The saved classifier is not yet connected to a complete inference workflow.
-- Resume upload and document parsing are not part of this current stage.
-- Match scoring, keyword suggestions, and role recommendations are not yet
-  included in this step.
-- The project does not yet provide a finished end-to-end user interface.
+- Inference: the saved classifier, vectorizers, and label encoder are loaded
+  to predict the top 3 job roles for a resume.
+- Resume upload and text extraction for PDF, DOCX, and TXT files.
+- Semantic match scoring, keyword extraction, missing-keyword detection, and
+  improvement suggestions.
+- A Flask application with a web interface.
+- Optional Google sign-in, saved analysis history, and a progress dashboard.
+
+### Not yet implemented
+
+- PDF export of the analysis report.
+- Automated tests and a repeatable evaluation report.
 
 ## 1. Purpose
 
@@ -34,8 +43,7 @@ This workflow covers the first machine-learning stage of ResumeFit AI:
 4. Saving reusable model artifacts.
 
 The workflow is intentionally isolated from the main application. It does not
-start Flask and does not modify the parent project's `models/` or `data/`
-directories.
+start Flask, and it can be run on its own from the command line.
 
 ## 2. Input datasets
 
@@ -169,24 +177,18 @@ The workflow uses fixed random state `42` for the train/test split and
 cross-validation shuffling. Results can still vary if the dataset, dependency
 versions, or preprocessing rules change.
 
-## 9. Future work
+## 9. Further work
 
-The next development stages can build on the saved artifacts by:
-
-1. Loading the classifier, vectorizers, and label encoder for inference.
-2. Adding reliable PDF, DOCX, and TXT resume text extraction.
-3. Connecting resume and job-description text to semantic match scoring.
-4. Adding keyword extraction, missing-keyword detection, and suggestions.
-5. Connecting the processing modules to the Flask application.
-6. Adding automated tests and a repeatable evaluation report.
-7. Reviewing class imbalance, rare categories, and possible overfitting.
-8. Preparing deployment instructions after the local workflow is stable.
+1. Add automated tests and a repeatable evaluation report.
+2. Review class imbalance, rare categories, and possible overfitting.
+3. Add PDF export of the analysis report.
+4. Prepare deployment instructions (production server, HTTPS) once the local
+   workflow is stable.
 
 ## 10. Limitations
 
 - The classifier reflects the distribution and quality of the source dataset.
 - Rare categories provide less reliable per-category metrics.
 - Test accuracy does not guarantee performance on every real-world resume.
-- The current workflow trains the job-role classifier; it does not yet
-  implement the full Flask inference interface.
-
+- This stage trains the job-role classifier only. Inference and the web
+  interface are built on top of it in later stages (see `README.md`).
