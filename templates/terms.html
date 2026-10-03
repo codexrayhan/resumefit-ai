@@ -40,6 +40,12 @@
       <nav class="header-nav" aria-label="Primary navigation">
         <a href="/" class="nav-link">Workspace</a>
         <a href="/docs" class="nav-link">Documentation</a>
+        {% if current_user.is_authenticated %}
+          <a href="/dashboard" class="nav-link">Dashboard</a>
+          <a href="/logout" class="nav-link">Log out</a>
+        {% else %}
+          <a href="/login" class="nav-link">Sign in</a>
+        {% endif %}
       </nav>
     </div>
   </header>
@@ -49,7 +55,7 @@
     <!-- Large introductory hero section -->
     <header class="help-hero">
       <h1>Terms of Service</h1>
-      <div class="metadata-tag">Last updated: June 2026</div>
+      <div class="metadata-tag">Last updated: October 2026</div>
     </header>
     <div class="help-layout" style="grid-template-columns: 1fr; max-width: 800px; padding-top: 0;">
       <!-- The main text content for this legal page -->
@@ -58,9 +64,10 @@
         <h2 class="help-section-title">1. Acceptance of Terms</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">By using ResumeFit AI, you
           agree to these terms. If you do not agree, please do not use the service.</p>
-        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">These terms apply each time
-          you submit a resume or job description for analysis. No account creation or explicit agreement step is
-          required — use of the tool constitutes acceptance.</p>
+          <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">These terms apply each time
+          you submit a resume or job description for analysis, and whenever you sign in. You can use the tool as a
+          guest, limited to two free analyses per browser, or sign in with Google to save your analysis
+          history. No separate agreement step is required — use of the tool constitutes acceptance.</p>
 
         <h2 class="help-section-title">2. What This Service Is</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">ResumeFit AI is a free,
@@ -84,8 +91,15 @@
           <li>Attempt to reverse-engineer, abuse, or disrupt the service</li>
           <li>Use the tool for any unlawful purpose</li>
         </ul>
-        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">You are solely responsible
+                <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">You are solely responsible
           for the content you submit. Ensure you have the right to share anything you upload.</p>
+
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">If you sign in, you are
+          responsible for activity under your Google account and for keeping it secure. You can delete your ResumeFit
+          AI account and all saved analyses at any time from the dashboard. How your data is handled is described in the
+          <a href="/privacy"
+            style="color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px;">Privacy
+            Policy</a>.</p>
 
         <h2 class="help-section-title">4. Disclaimer</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">The match score and suggestions

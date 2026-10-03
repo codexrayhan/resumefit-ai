@@ -40,6 +40,12 @@
       <nav class="header-nav" aria-label="Primary navigation">
         <a href="/" class="nav-link">Workspace</a>
         <a href="/docs" class="nav-link">Documentation</a>
+        {% if current_user.is_authenticated %}
+          <a href="/dashboard" class="nav-link">Dashboard</a>
+          <a href="/logout" class="nav-link">Log out</a>
+        {% else %}
+          <a href="/login" class="nav-link">Sign in</a>
+        {% endif %}
       </nav>
     </div>
   </header>
@@ -49,7 +55,7 @@
     <!-- Large introductory hero section -->
     <header class="help-hero">
       <h1>Security</h1>
-      <div class="metadata-tag">Last updated: June 2026</div>
+      <div class="metadata-tag">Last updated: October 2026</div>
     </header>
     <div class="help-layout" style="grid-template-columns: 1fr; max-width: 800px; padding-top: 0;">
       <!-- The main text content for this legal page -->
@@ -57,9 +63,11 @@
 
         <h2 class="help-section-title">1. Our Security Approach</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">ResumeFit AI is designed with a
-          simple, honest security model: process what you send, return the result, keep nothing. There are no user
-          accounts to compromise, no database to breach, and no credentials of any kind stored anywhere in the
-          system.</p>
+          simple, honest security model: process what you send, return the result, and keep as little as possible.
+          Your resume file and text are never stored. Guests have no account and nothing is saved. If you sign in
+          with Google, the app keeps only your basic profile details and your analysis scores. Sign-in is handled by
+          Google, so the app never sees or stores a password. Signed-in users can view and delete only their own
+          records.</p>
         <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">All computation happens
           server-side in Python. The ML models — SBERT <code
             style="font-family: var(--font-mono); font-size: 0.875em;">all-MiniLM-L6-v2</code>, the LinearSVC
@@ -68,9 +76,10 @@
           ever made during analysis.</p>
 
         <h2 class="help-section-title">2. File Handling</h2>
-        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">Uploaded files are held in a
-          temporary buffer for the duration of text extraction only — usually under a second. They are never written to
-          permanent disk storage. Once the text has been extracted, the buffer is discarded.</p>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">An uploaded file is written to
+          a temporary location on the server only long enough for its text to be extracted — usually under a second.
+          The temporary file and its folder are deleted immediately afterwards, whether or not extraction succeeds. The
+          file is never kept, and the extracted text is never saved.</p>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">Flask enforces a hard upload
           limit of <strong style="color: var(--text-primary);">5 MB</strong> per request. Any file exceeding this
           limit is rejected before processing begins.</p>
@@ -79,33 +88,63 @@
             style="font-family: var(--font-mono); font-size: 0.875em;">.pdf</code>, <code
             style="font-family: var(--font-mono); font-size: 0.875em;">.docx</code>, and <code
             style="font-family: var(--font-mono); font-size: 0.875em;">.txt</code> files are accepted. Any other
-          extension is rejected with an error before any content is read.</p>
+          extension is rejected with an error before any content is read. Uploaded file names are sanitized before they
+          are used.</p>
 
         <h2 class="help-section-title">3. Data Transmission</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">In a local deployment, your
           resume file travels only from your browser to <code
             style="font-family: var(--font-mono); font-size: 0.875em;">localhost</code>. It never leaves your
-          machine. No data is forwarded to any external server, cloud service, or third party at any point during
-          analysis.</p>
+          machine. Your resume and job description are not forwarded to any external server, cloud service, or third
+          party during analysis. If you choose to sign in, your browser is redirected to Google to confirm your
+          identity, and Google shares your name, email address, and profile picture link with the app. Your resume is
+          never part of that exchange.</p>
         <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">If the app is deployed to a
           remote server, the file upload travels over the network connection between your browser and that server.
           We recommend running the app over HTTPS in any network-accessible deployment.</p>
 
-        <h2 class="help-section-title">4. What We Do Not Collect</h2>
+        <h2 class="help-section-title">4. Accounts and Sessions</h2>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">Signing in is optional. When
+          you sign in, authentication is handled by Google using OAuth 2.0 and OpenID Connect. The app never receives
+          or stores your Google password.</p>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">On your first sign-in, the app
+          creates an account record containing your Google account identifier, name, email address, and profile
+          picture link. For each analysis you run while signed in, it saves the resume name and job title you entered,
+          the match score, the missing keywords, the predicted roles, and a timestamp. Resume text and job descriptions
+          are never saved.</p>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">The app uses a single session
+          cookie. It is cryptographically signed with a secret key so it cannot be altered, it is not readable by page
+          scripts (<code style="font-family: var(--font-mono); font-size: 0.875em;">HttpOnly</code>), and it is
+          restricted to same-site requests (<code
+            style="font-family: var(--font-mono); font-size: 0.875em;">SameSite=Lax</code>). For guests, the same
+          cookie holds a counter of free analyses used.</p>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">Every request for history or for
+          deleting data is checked against the signed-in account. A user can read and delete only their own records,
+          and a request for someone else's record is answered as if it does not exist.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">Account and history data are
+          kept in a local database file on the server. The sign-in credentials and the session secret are supplied
+          through environment variables and are kept out of version control. From the dashboard, a user can delete a
+          single analysis or delete their account, which permanently removes the account record and all saved
+          analyses.</p>
+
+        <h2 class="help-section-title">5. What We Do Not Collect</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">We do not collect, store, or
           process any of the following:</p>
         <ul style="margin: 0 0 24px 20px; color: var(--text-secondary); line-height: 2;">
-          <li>Passwords or authentication credentials</li>
+          <li>Passwords or other authentication credentials</li>
           <li>Payment or financial information</li>
-          <li>Email addresses or phone numbers</li>
-          <li>IP addresses or device fingerprints</li>
-          <li>Browser history or behavioral analytics</li>
+          <li>Phone numbers or postal addresses</li>
+          <li>The contents of your resume or job description</li>
+          <li>Device fingerprints, browser history, or behavioral analytics</li>
         </ul>
-        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">There is simply no
-          mechanism in this application to collect any of the above. The attack surface is limited to the resume
-          text and job description you choose to submit.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">The application does not record
+          or use IP addresses. As with any web server, the server software may write standard access logs, which
+          contain request lines but never resume content.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">Guests provide no personal
+          information at all. For signed-in users, the only personal data held is the Google profile information listed
+          above, together with the analysis scores they chose to save.</p>
 
-        <h2 class="help-section-title">5. Responsible Disclosure</h2>
+        <h2 class="help-section-title">6. Responsible Disclosure</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">If you discover a security
           vulnerability in ResumeFit AI, please report it responsibly. Do not publish details publicly before giving
           us a chance to address it.</p>
@@ -117,18 +156,29 @@
           and describe what you found. We will respond as quickly as we can.
         </p>
 
-        <h2 class="help-section-title">6. Limitations</h2>
+        <h2 class="help-section-title">7. Limitations</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">ResumeFit AI is a university
           course project, not a hardened production application. It has not undergone a formal security audit or
           penetration test.</p>
-        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">Flask's built-in development
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">Flask's built-in development
           server and debug mode must be disabled before any public-facing deployment. Running with
           <code style="font-family: var(--font-mono); font-size: 0.875em;">debug=True</code> in production exposes
           an interactive debugger that can execute arbitrary code. We strongly recommend using a production-grade WSGI
           server (such as Gunicorn) if you deploy this application beyond a local demo.
         </p>
+        <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">If you deploy the app with
+          Google sign-in enabled, serve it over HTTPS, use a long random
+          <code style="font-family: var(--font-mono); font-size: 0.875em;">SECRET_KEY</code>, and keep the
+          <code style="font-family: var(--font-mono); font-size: 0.875em;">.env</code> file and the Google client
+          secret out of version control. Also add your deployed address followed by
+          <code style="font-family: var(--font-mono); font-size: 0.875em;">/auth/callback</code> as an authorized
+          redirect URI in Google Cloud, and enable secure session cookies. The built-in SQLite database is suitable for
+          a demo, but a larger deployment should use a managed database with regular backups.</p>
+        <p style="margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">The guest limit of two free
+          analyses is tracked in a cookie, so it is a convenience limit rather than a security control. Clearing
+          cookies resets it.</p>
 
-        <h2 class="help-section-title">7. Contact</h2>
+        <h2 class="help-section-title">8. Contact</h2>
         <p style="margin-bottom: 8px; color: var(--text-secondary); line-height: 1.6;">This project is maintained by
           <strong style="color: var(--text-primary);">Team_NullPointer</strong> as part of a university AI course.
         </p>
@@ -173,4 +223,3 @@
 </body>
 
 </html>
-
