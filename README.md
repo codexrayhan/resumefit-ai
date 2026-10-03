@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
 </p>
 
-ResumeFit AI analyzes a resume against a job description and returns a match score, missing keywords, improvement suggestions, and predicted job roles — all running locally with no sign-up or data storage.
+ResumeFit AI analyzes a resume against a job description and returns a match score, missing keywords, improvement suggestions, and predicted job roles. Use it as a guest for 2 free analyses, or sign in with Google to save your history and track how your resume improves over time. All analysis runs locally with no external AI APIs, and your resume text is never stored.
 
 ## Features
 
@@ -20,26 +20,45 @@ ResumeFit AI analyzes a resume against a job description and returns a match sco
 - Improvement suggestions as a prioritized action list derived from the missing keywords
 - Job role prediction showing the top 3 most likely career categories based on resume content
 - Accepts PDF, DOCX, and TXT resume formats
-- No external APIs — all inference runs on the user's machine
+- Google sign-in with a personal dashboard
+- Progress tracking: score history and improvement per resume
+- Guest mode: 2 free analyses without an account
+- No external AI APIs — all inference runs on the user's machine
 
 ## How It Works
 
-1. **Upload** — the user uploads a resume (PDF, DOCX, or TXT) and pastes a job description into the text area.
+1. **Upload** — the user uploads a resume (PDF, DOCX, or TXT) and pastes a job description into the text area. Signed-in users can also name the resume and the target job.
 2. **Parse** — the system extracts raw text using pdfplumber, PyPDF2 (fallback), or python-docx depending on the file type.
 3. **Analyse** — SBERT (all-MiniLM-L6-v2) generates embeddings for both texts and cosine similarity produces a match score from 0 to 100.
 4. **Keywords** — TF-IDF and RAKE extract important terms from the job description and identify which are missing from the resume.
 5. **Results** — the browser displays the match score, missing keywords, improvement suggestions, and predicted job roles without a page reload.
+6. **Save (signed-in users)** — the score, missing keywords, predicted roles, resume name, and job title are saved so the dashboard can chart progress. The resume text itself is never saved.
+
+## Accounts and Data
+
+| User type | Limit | What is stored |
+| :--- | :--- | :--- |
+| **Guest** | 2 free analyses per browser | Nothing in the database. A counter is kept in a session cookie |
+| **Signed-in (Google)** | Unlimited | Name, email, and profile picture URL from the Google account, plus for each analysis: resume name, job title, score, missing keywords, predicted roles, and timestamp |
+
+- Resume text is never stored.
+- From the dashboard, a user can delete a single analysis or delete their account and all saved data.
+- Google is used only for sign-in. Analysis does not use any external service.
+- The guest limit is tracked in a cookie, so it is a soft limit that clearing cookies resets.
 
 ## Tech Stack
 
 | Category | Tools |
 | :--- | :--- |
-| **Frontend** | HTML, CSS, JavaScript |
+| **Frontend** | HTML, CSS, JavaScript, Chart.js (dashboard) |
 | **Backend** | Flask 3.1.3, Werkzeug 3.1.8 |
+| **Authentication** | Authlib (Google OAuth 2.0 / OpenID Connect), Flask-Login |
+| **Database** | Flask-SQLAlchemy, SQLite |
 | **Machine Learning** | scikit-learn 1.8.0, scipy 1.17.1, joblib 1.5.3 |
 | **NLP** | nltk 3.9.4, rake-nltk 1.0.6, sentence-transformers 5.5.1 |
 | **Data Processing** | numpy 2.4.6, pandas 3.0.3, torch 2.12.0 |
 | **Document Parsing** | pdfplumber 0.11.9, PyPDF2 3.0.1, python-docx 1.2.0, Pillow 12.2.0 |
+| **Configuration** | python-dotenv |
 
 ## Quick Start
 
@@ -47,6 +66,7 @@ ResumeFit AI analyzes a resume against a job description and returns a match sco
 
 - Python 3.11+
 - Git
+- A Google account (to create the sign-in credentials)
 
 ### Installation
 
@@ -87,12 +107,37 @@ ResumeFit AI analyzes a resume against a job description and returns a match sco
 
    Download the three `.pkl` files from [GitHub Releases](https://github.com/codexrayhan/resumefit-ai/releases/latest) and place them in the `models/` folder. See the [Model Files](#model-files) section for details.
 
-7. **Run the application**
+7. **Configure Google sign-in** (see the next section)
+
+8. **Run the application**
    ```bash
    python app.py
    ```
 
-   The app runs at `http://localhost:5000`. The first run downloads the SBERT model (~90 MB) automatically.
+   The app runs at `http://localhost:5000`. Open it as `localhost`, not `127.0.0.1`, so the Google redirect matches. The first run downloads the SBERT model (~90 MB) automatically.
+
+## Configure Google Sign-In
+
+1. In [Google Cloud Console](https://console.cloud.google.com), create a project.
+2. Set up the **OAuth consent screen** (External) and add your Gmail under **Test users**.
+3. Create an **OAuth client ID** of type **Web application**.
+4. Add this exact **Authorized redirect URI**:
+   ```text
+   http://localhost:5000/auth/callback
+   ```
+5. Copy `.env.example` to `.env` and fill in the values:
+   ```text
+   SECRET_KEY=a-long-random-string
+   GOOGLE_CLIENT_ID=your-client-id
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   ```
+   Generate a secret key with:
+   ```bash
+   python -c "import secrets; print(secrets.token_hex(32))"
+   ```
+6. Never commit `.env`. It is listed in `.gitignore`.
+
+While the Google consent screen is in Testing mode, only the emails added as test users can sign in.
 
 ## Model Files
 
@@ -123,11 +168,15 @@ This will generate new `.pkl` files in the `models/` directory.
 ```text
 resumefit-ai/
 ├── app.py                    # Flask entry point and route definitions
+├── auth.py                   # Google sign-in (Authlib) and Flask-Login setup
+├── models.py                 # Database tables: User and Analysis
 ├── requirements.txt          # Pinned package dependencies
+├── .env.example              # Template for required environment variables
 ├── README.md
 ├── API.md                    # HTTP API reference
 ├── LICENSE
 ├── .gitignore
+├── instance/                 # Local SQLite database (not in Git)
 ├── models/                   # Downloaded .pkl model files (not in Git)
 │   ├── job_classifier.pkl
 │   ├── tfidf_vectorizer.pkl
@@ -145,6 +194,7 @@ resumefit-ai/
 │   └── script.js
 ├── templates/
 │   ├── index.html
+│   ├── dashboard.html
 │   ├── docs.html
 │   ├── privacy.html
 │   ├── security.html
@@ -172,12 +222,15 @@ The BPO category scores F1 0.00 not because the model is broken, but because onl
 - **Model files missing** — download `job_classifier.pkl`, `tfidf_vectorizer.pkl`, and `label_encoder.pkl` from [GitHub Releases](https://github.com/codexrayhan/resumefit-ai/releases/latest) and place them in `models/`.
 - **NLTK data errors** — run `python -m nltk.downloader stopwords punkt punkt_tab` with the virtual environment active.
 - **PDF cannot be read** — scanned image PDFs contain no extractable text. The system requires a text-based PDF. Convert the document to DOCX or TXT before uploading.
-- **Port 5000 already in use** — stop the service using that port, or change the port number in `app.py`.
+- **Port 5000 already in use** — stop the service using that port, or change the port number in `app.py`. If you change it, update the redirect URI in Google Cloud to match.
+- **`KeyError: 'SECRET_KEY'` on startup** — the `.env` file is missing or misnamed. Copy `.env.example` to `.env` and fill it in.
+- **`redirect_uri_mismatch` when signing in** — open the app as `http://localhost:5000` and make sure the redirect URI in Google Cloud is exactly `http://localhost:5000/auth/callback`.
+- **Google says access is blocked or not allowed** — add your email under **Test users** on the OAuth consent screen.
 
 ## Future Work
 
-- Interactive editing and recalculation — edit the parsed resume and job description text directly on the results page and get an updated score without re-uploading the file.
 - PDF export of the gap analysis report including the match score, missing keywords, and improvement suggestions.
+- Interactive editing and recalculation on the results page, using the existing `/reanalyze` endpoint.
 
 ## License
 
