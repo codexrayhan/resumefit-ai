@@ -206,7 +206,7 @@ resumefit-ai/
 
 ## Model Performance
 
-The job classifier is a LinearSVC model trained on 2,457 resumes across 24 job categories using an 80/20 stratified train/test split. It uses dual TF-IDF features — word-level n-grams and character-level n-grams — combined with `scipy.sparse.hstack`. Hyperparameter search over `C = [0.1, 0.5, 1.0, 2.0, 5.0, 10.0]` confirmed that `C = 1.0` is optimal.
+The job classifier is a class-balanced LinearSVC (scikit-learn's default regularization, `C = 1.0`) trained on resumes across 24 job categories. It is evaluated with an 80/20 stratified train/test split and 5-fold stratified cross-validation, both using a fixed random seed of 42.
 
 | Metric | Score |
 | :--- | :--- |
