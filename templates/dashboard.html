@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard · ResumeFit AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .dash { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+    .dash-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .dash-header nav a { margin-left: 16px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 24px 0; }
+    .stat { border: 1px solid #ddd; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; }
+    .stat strong { font-size: 1.8rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+    section { margin-bottom: 32px; }
+  </style>
+</head>
+<body>
+  <main class="dash">
+    <header class="dash-header">
+      <div>
+        <h1>Welcome, {{ current_user.name or current_user.email }}</h1>
+        <p>Your resume progress over time</p>
+      </div>
+      <nav>
+        <a href="/">New analysis</a>
+        <a href="/logout">Log out</a>
+      </nav>
+    </header>
+
+    <section class="stats" id="stats"></section>
+
+    <section>
+      <h2>Score over time</h2>
+      <canvas id="chart" height="110"></canvas>
+    </section>
+
+    <section>
+      <h2>Progress by resume</h2>
+      <div id="summary"></div>
+    </section>
+
+    <section>
+      <h2>History</h2>
+      <table id="history">
+        <thead>
+          <tr><th>Date</th><th>Resume</th><th>Job</th><th>Score</th><th>Missing</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section>
+      <button id="delete-account">Delete my account and data</button>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const palette = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#dc2626', '#0891b2'];
+    let chart;
+
+    function cell(row, text) {
+      const td = document.createElement('td');
+      td.textContent = text;
+      row.appendChild(td);
+    }
+
+    function fmtDate(iso) {
+      return new Date(iso).toLocaleDateString(undefined,
+        { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function renderStats(data) {
+      const box = document.getElementById('stats');
+      box.replaceChildren();
+      [['Resumes checked', data.total],
+       ['Average score', data.average_score],
+       ['Best score', data.best_score]].forEach(([name, value]) => {
+        const card = document.createElement('div');
+        card.className = 'stat';
+        const v = document.createElement('strong');
+        v.textContent = value;
+        const n = document.createElement('span');
+        n.textContent = name;
+        card.append(v, n);
+        box.appendChild(card);
+      });
+    }
+
+    function renderChart(data) {
+      const byLabel = {};
+      data.analyses.forEach(a => (byLabel[a.label] = byLabel[a.label] || []).push(a.score));
+      const maxLen = Math.max(0, ...Object.values(byLabel).map(s => s.length));
+      const datasets = Object.entries(byLabel).map(([label, scores], i) => ({
+        label,
+        data: scores,
+        borderColor: palette[i % palette.length],
+        backgroundColor: palette[i % palette.length],
+        tension: 0.25,
+      }));
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById('chart'), {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: maxLen }, (_, i) => 'Check ' + (i + 1)),
+          datasets,
+        },
+        options: {
+          scales: { y: { min: 0, max: 100, title: { display: true, text: 'Match score' } } },
+        },
+      });
+    }
+
+    function renderSummary(data) {
+      const box = document.getElementById('summary');
+      box.replaceChildren();
+      if (!data.progress.length) {
+        box.textContent = 'No analyses yet. Run your first one to start tracking.';
+        return;
+      }
+      data.progress.forEach(p => {
+        const line = document.createElement('p');
+        const change = p.count < 2
+          ? 'run one more check to see progress'
+          : (p.improvement >= 0 ? '+' : '') + p.improvement + ' points since your first check';
+        line.textContent =
+          `${p.label}: ${p.first_score} → ${p.latest_score} (${p.count} checks), ${change}`;
+        box.appendChild(line);
+      });
+    }
+
+    function renderTable(data) {
+      const body = document.querySelector('#history tbody');
+      body.replaceChildren();
+      [...data.analyses].reverse().forEach(a => {
+        const tr = document.createElement('tr');
+        cell(tr, fmtDate(a.created_at));
+        cell(tr, a.label);
+        cell(tr, a.jd_title || '—');
+        cell(tr, a.score);
+        cell(tr, a.missing_count);
+        const td = document.createElement('td');
+        const btn = document.createElement('button');
+        btn.textContent = 'Delete';
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this analysis?')) return;
+          await fetch('/api/analysis/' + a.id, { method: 'DELETE' });
+          load();
+        });
+        td.appendChild(btn);
+        tr.appendChild(td);
+        body.appendChild(tr);
+      });
+    }
+
+    async function load() {
+      const res = await fetch('/api/history');
+      if (res.status === 401) { location.href = '/login'; return; }
+      const data = await res.json();
+      renderStats(data);
+      renderChart(data);
+      renderSummary(data);
+      renderTable(data);
+    }
+
+    document.getElementById('delete-account').addEventListener('click', async () => {
+      if (!confirm('This permanently deletes your account and all saved history. Continue?')) return;
+      await fetch('/api/account', { method: 'DELETE' });
+      location.href = '/';
+    });
+
+    load();
+  </script>
+</body>
+</html>

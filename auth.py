@@ -65,7 +65,7 @@ def callback():
         db.session.commit()
 
     login_user(user)
-    return redirect("/")
+    return redirect("/dashboard")
 
 
 @auth_bp.route("/logout")

@@ -324,7 +324,10 @@ def delete_account():
     db.session.commit()
     return jsonify({"ok": True})
 
-
+@app.route("/dashboard", methods=["GET"])
+@login_required
+def dashboard():
+    return render_template("dashboard.html")
 @app.route("/health", methods=["POST"])
 def health():
     models_loaded = sbert_model is not None
