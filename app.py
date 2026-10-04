@@ -135,6 +135,19 @@ def _analysis_response(resume_text, job_description, label="", jd_title=""):
     )
 
 
+def _keyword_diff(first, latest):
+    """Compare the missing keywords of two analyses (case-insensitive)."""
+    first = first or []
+    latest = latest or []
+    first_set = {k.lower() for k in first}
+    latest_set = {k.lower() for k in latest}
+    return {
+        "fixed": [k for k in first if k.lower() not in latest_set],
+        "still_missing": [k for k in latest if k.lower() in first_set],
+        "new_gaps": [k for k in latest if k.lower() not in first_set],
+    }
+
+
 @app.after_request
 def add_no_cache_headers(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -270,6 +283,8 @@ def api_history():
             "jd_title": a.jd_title,
             "score": a.score,
             "missing_count": a.missing_count,
+            "missing_keywords": a.missing_keywords or [],
+            "predicted_roles": a.predicted_roles or [],
             "created_at": a.created_at.isoformat() + "Z",
         }
         for a in rows
@@ -281,16 +296,20 @@ def api_history():
 
     progress = []
     for label, items in groups.items():
-        first, latest = items[0].score, items[-1].score
-        progress.append(
-            {
-                "label": label,
-                "count": len(items),
-                "first_score": first,
-                "latest_score": latest,
-                "improvement": round(latest - first, 1),
-            }
-        )
+        first, latest = items[0], items[-1]
+        entry = {
+            "label": label,
+            "count": len(items),
+            "first_score": first.score,
+            "latest_score": latest.score,
+            "improvement": round(latest.score - first.score, 1),
+            "fixed": [],
+            "still_missing": [],
+            "new_gaps": [],
+        }
+        if len(items) > 1:
+            entry.update(_keyword_diff(first.missing_keywords, latest.missing_keywords))
+        progress.append(entry)
 
     scores = [a.score for a in rows]
     return jsonify(
@@ -324,10 +343,13 @@ def delete_account():
     db.session.commit()
     return jsonify({"ok": True})
 
+
 @app.route("/dashboard", methods=["GET"])
 @login_required
 def dashboard():
     return render_template("dashboard.html")
+
+
 @app.route("/health", methods=["POST"])
 def health():
     models_loaded = sbert_model is not None

@@ -13,8 +13,18 @@
     .stat { border: 1px solid #ddd; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; }
     .stat strong { font-size: 1.8rem; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; vertical-align: top; }
     section { margin-bottom: 32px; }
+    .progress-card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .kw-group { margin-top: 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip { border: 1px solid #ddd; border-radius: 999px; padding: 2px 10px; font-size: 0.8rem; }
+    .chip.fixed { background: #dcfce7; border-color: #86efac; }
+    .chip.missing { background: #fef9c3; border-color: #fde047; }
+    .chip.new { background: #fee2e2; border-color: #fca5a5; }
+    .muted { color: #71717a; font-size: 0.8rem; }
+    .details-row td { background: #fafafa; }
+    .row-actions button { margin-right: 6px; }
   </style>
 </head>
 <body>
@@ -60,6 +70,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const palette = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#dc2626', '#0891b2'];
+    const MAX_CHIPS = 15;
     let chart;
 
     function cell(row, text) {
@@ -71,6 +82,46 @@
     function fmtDate(iso) {
       return new Date(iso).toLocaleDateString(undefined,
         { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function formatRole(role) {
+      return String(role).split('-')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+
+    // A row of keyword "chips". Text is always set with textContent.
+    function chips(words, cls) {
+      const wrap = document.createElement('div');
+      wrap.className = 'chips';
+      if (!words.length) {
+        const none = document.createElement('span');
+        none.className = 'muted';
+        none.textContent = 'None';
+        wrap.appendChild(none);
+        return wrap;
+      }
+      words.slice(0, MAX_CHIPS).forEach(w => {
+        const c = document.createElement('span');
+        c.className = 'chip ' + cls;
+        c.textContent = w;
+        wrap.appendChild(c);
+      });
+      if (words.length > MAX_CHIPS) {
+        const more = document.createElement('span');
+        more.className = 'muted';
+        more.textContent = '+' + (words.length - MAX_CHIPS) + ' more';
+        wrap.appendChild(more);
+      }
+      return wrap;
+    }
+
+    function keywordGroup(title, words, cls) {
+      const box = document.createElement('div');
+      box.className = 'kw-group';
+      const heading = document.createElement('strong');
+      heading.textContent = title + ' (' + words.length + ')';
+      box.append(heading, chips(words, cls));
+      return box;
     }
 
     function renderStats(data) {
@@ -122,14 +173,61 @@
         return;
       }
       data.progress.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'progress-card';
+
         const line = document.createElement('p');
         const change = p.count < 2
           ? 'run one more check to see progress'
           : (p.improvement >= 0 ? '+' : '') + p.improvement + ' points since your first check';
         line.textContent =
           `${p.label}: ${p.first_score} → ${p.latest_score} (${p.count} checks), ${change}`;
-        box.appendChild(line);
+        card.appendChild(line);
+
+        if (p.count >= 2) {
+          card.append(
+            keywordGroup('No longer missing', p.fixed, 'fixed'),
+            keywordGroup('Still missing', p.still_missing, 'missing'),
+            keywordGroup('New gaps', p.new_gaps, 'new')
+          );
+          const note = document.createElement('p');
+          note.className = 'muted';
+          note.textContent =
+            'Compares your first and latest check. A keyword can also disappear from this list ' +
+            'if the newer job description no longer asks for it, so compare against the same job.';
+          card.appendChild(note);
+        }
+        box.appendChild(card);
       });
+    }
+
+    function buildDetails(a) {
+      const wrap = document.createElement('div');
+      wrap.appendChild(keywordGroup('Missing keywords', a.missing_keywords, 'missing'));
+
+      const roles = document.createElement('div');
+      roles.className = 'kw-group';
+      const heading = document.createElement('strong');
+      heading.textContent = 'Predicted roles';
+      roles.appendChild(heading);
+      const list = document.createElement('div');
+      list.className = 'chips';
+      if (!a.predicted_roles.length) {
+        const none = document.createElement('span');
+        none.className = 'muted';
+        none.textContent = 'None';
+        list.appendChild(none);
+      } else {
+        a.predicted_roles.forEach(r => {
+          const c = document.createElement('span');
+          c.className = 'chip';
+          c.textContent = formatRole(r.role) + ' ' + Math.round(r.confidence) + '%';
+          list.appendChild(c);
+        });
+      }
+      roles.appendChild(list);
+      wrap.appendChild(roles);
+      return wrap;
     }
 
     function renderTable(data) {
@@ -142,17 +240,36 @@
         cell(tr, a.jd_title || '—');
         cell(tr, a.score);
         cell(tr, a.missing_count);
+
+        const detailsRow = document.createElement('tr');
+        detailsRow.className = 'details-row';
+        detailsRow.hidden = true;
+        const detailsCell = document.createElement('td');
+        detailsCell.colSpan = 6;
+        detailsCell.appendChild(buildDetails(a));
+        detailsRow.appendChild(detailsCell);
+
         const td = document.createElement('td');
-        const btn = document.createElement('button');
-        btn.textContent = 'Delete';
-        btn.addEventListener('click', async () => {
+        td.className = 'row-actions';
+
+        const viewBtn = document.createElement('button');
+        viewBtn.textContent = 'Details';
+        viewBtn.addEventListener('click', () => {
+          detailsRow.hidden = !detailsRow.hidden;
+          viewBtn.textContent = detailsRow.hidden ? 'Details' : 'Hide';
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', async () => {
           if (!confirm('Delete this analysis?')) return;
           await fetch('/api/analysis/' + a.id, { method: 'DELETE' });
           load();
         });
-        td.appendChild(btn);
+
+        td.append(viewBtn, delBtn);
         tr.appendChild(td);
-        body.appendChild(tr);
+        body.append(tr, detailsRow);
       });
     }
 
